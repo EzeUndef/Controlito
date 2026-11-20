@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite Databases & Local User Data (CRITICAL FOR PRIVACY)
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+.controlito/
+
+# Excel files with personal financial data (DO NOT COMMIT PERSONAL EXCEL)
+*.xlsx
+*.xls
+*.csv
+!controlito_plantilla_ejemplo.xlsx
+
+# Environments & secrets
+.env
+.env.local
+*.secret
+credentials.json
+
+# Executables & Installer outputs
+*.exe
+dist/
+dist_installer/
+build/
+*.spec
+
+# IDEs & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
