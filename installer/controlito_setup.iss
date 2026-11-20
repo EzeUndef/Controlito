@@ -4,7 +4,7 @@
 #define MyAppName "Controlito"
 #define MyAppVersion "1.2.0"
 #define MyAppPublisher "Controlito Open Source"
-#define MyAppURL "https://github.com/Controlito/Controlito"
+#define MyAppURL "https://github.com/EzeUndef/Controlito"
 #define MyAppExeName "Controlito.exe"
 
 [Setup]

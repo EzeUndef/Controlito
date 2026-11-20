@@ -16,6 +16,7 @@ from ui.advisor import AdvisorView
 from ui.categories import CategoriesView
 from ui.simple_chat import SimpleChatView
 from ui.onboarding import OnboardingView
+from ui.settings_view import SettingsView
 
 
 class ControlitoApp(ctk.CTk):
@@ -35,7 +36,7 @@ class ControlitoApp(ctk.CTk):
 
         # Load saved theme preference
         from ui.theme import ThemeManager, BG_MAIN, BG_SIDEBAR
-        saved_theme = self.db.get_setting("theme", "🌊 Midnight Blue")
+        saved_theme = self.db.get_setting("theme", "💼 Corporate Slate")
         ThemeManager.set_theme(saved_theme)
 
         # Layout: Sidebar on left, Content on right
@@ -169,6 +170,14 @@ class ControlitoApp(ctk.CTk):
             view = BudgetView(self.content_area, self.db, on_data_changed=self.on_data_updated)
         elif key == "advisor":
             view = AdvisorView(self.content_area, self.db)
+        elif key == "settings":
+            view = SettingsView(
+                self.content_area,
+                self.db,
+                on_theme_change=self.handle_theme_changed,
+                on_import_excel=self.import_excel_dialog,
+                on_reset_onboarding=self.confirm_reset_onboarding
+            )
         else:
             view = DashboardView(self.content_area, self.db, on_navigate=self.navigate_to)
 

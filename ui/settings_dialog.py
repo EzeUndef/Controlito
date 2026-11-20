@@ -59,7 +59,7 @@ class SettingsDialog(ctk.CTkToplevel):
 
         lbl_t_desc = ctk.CTkLabel(
             sec_theme,
-            text="Selecciona el estilo visual con tipografía Bahnschrift que mejor se adapte a tu gusto:",
+            text="Selecciona el estilo visual corporativo con tipografía empresarial Segoe UI:",
             font=FONT_SMALL,
             text_color=curr["text_muted"]
         )

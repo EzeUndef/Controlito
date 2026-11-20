@@ -14,7 +14,7 @@ class Sidebar(ctk.CTkFrame):
         self.on_import_excel = on_import_excel
         self.on_toggle_mode = on_toggle_mode
         self.on_theme_change = on_theme_change
-        self.initial_theme = initial_theme or "🌊 Midnight Blue"
+        self.initial_theme = initial_theme or "💼 Corporate Slate"
         self.on_reset_onboarding = on_reset_onboarding
         self.db = db
         self.buttons = {}
@@ -28,16 +28,16 @@ class Sidebar(ctk.CTkFrame):
 
         # App branding header
         brand_frame = ctk.CTkFrame(self, fg_color="transparent")
-        brand_frame.pack(fill="x", padx=15, pady=(20, 15))
+        brand_frame.pack(fill="x", padx=15, pady=(16, 12))
 
-        lbl_logo = ctk.CTkLabel(brand_frame, text="🏦 Controlito", font=FONT_TITLE, text_color=curr.get("primary", "#6366f1"))
+        lbl_logo = ctk.CTkLabel(brand_frame, text="🏦 Controlito", font=FONT_TITLE, text_color=curr.get("primary", "#2563eb"))
         lbl_logo.pack(anchor="w")
 
         lbl_sub = ctk.CTkLabel(brand_frame, text="Gestión Financiera v1.2", font=FONT_SMALL, text_color=TEXT_MUTED)
         lbl_sub.pack(anchor="w")
 
         # Mode Selector (Modo Simple vs Modo Data)
-        lbl_mode = ctk.CTkLabel(self, text="EXPERIENCIA:", font=("Segoe UI", 9, "bold"), text_color=TEXT_MUTED)
+        lbl_mode = ctk.CTkLabel(self, text="EXPERIENCIA:", font=("Segoe UI", 8, "bold"), text_color=TEXT_MUTED)
         lbl_mode.pack(anchor="w", padx=15, pady=(0, 2))
 
         self.mode_var = ctk.StringVar(value="📊 Modo Data")
@@ -49,9 +49,9 @@ class Sidebar(ctk.CTkFrame):
             command=self._on_mode_change
         )
         self.mode_seg.set("📊 Data")
-        self.mode_seg.pack(fill="x", padx=12, pady=(0, 15))
+        self.mode_seg.pack(fill="x", padx=12, pady=(0, 10))
 
-        # Navigation menu items (including new Categories CRUD)
+        # Navigation menu items (including Settings as first-class item)
         nav_items = [
             ("chat", "💬 Chat Asistente"),
             ("dashboard", "📊 Dashboard"),
@@ -61,6 +61,7 @@ class Sidebar(ctk.CTkFrame):
             ("bank_accounts", "🏦 Bancos & Ahorros"),
             ("budget", "📋 Presupuesto"),
             ("advisor", "🧠 Asesor & Detective"),
+            ("settings", "⚙️ Configuración"),
         ]
 
         for key, label in nav_items:
@@ -69,14 +70,14 @@ class Sidebar(ctk.CTkFrame):
                 text=label,
                 anchor="w",
                 font=FONT_BODY_BOLD,
-                height=38,
+                height=34,
                 corner_radius=8,
                 fg_color=curr["primary"] if key == self.active_tab else "transparent",
                 text_color=curr["text_main"] if key == self.active_tab else curr["text_muted"],
                 hover_color=curr["primary_hover"],
                 command=lambda k=key: self.select_tab(k)
             )
-            btn.pack(fill="x", padx=12, pady=2)
+            btn.pack(fill="x", padx=10, pady=1)
             self.buttons[key] = btn
 
         # Spacer to push bottom utilities down
@@ -85,59 +86,37 @@ class Sidebar(ctk.CTkFrame):
 
         # Settings and Utilities section at the bottom
         bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
-        bottom_frame.pack(fill="x", padx=12, pady=(5, 15))
-
-        # Settings button that opens the dedicated Settings modal
-        btn_settings = ctk.CTkButton(
-            bottom_frame,
-            text="⚙️ Configuración / Ajustes",
-            font=FONT_BODY_BOLD,
-            height=36,
-            corner_radius=8,
-            fg_color=curr["bg_card"],
-            hover_color=curr["border"],
-            text_color=curr["text_main"],
-            command=self.open_settings_dialog
-        )
-        btn_settings.pack(fill="x", pady=(0, 8))
+        bottom_frame.pack(fill="x", padx=10, pady=(4, 10))
 
         # Quick Theme Selector in Sidebar
         theme_box = ctk.CTkFrame(bottom_frame, fg_color=curr["bg_card"], corner_radius=8)
-        theme_box.pack(fill="x", pady=(0, 8))
+        theme_box.pack(fill="x", pady=(0, 6))
 
-        lbl_theme = ctk.CTkLabel(theme_box, text="🎨 Tema:", font=("Segoe UI", 9, "bold"), text_color=curr["text_muted"])
-        lbl_theme.pack(anchor="w", padx=10, pady=(6, 2))
+        lbl_theme = ctk.CTkLabel(theme_box, text="🎨 Tema:", font=("Segoe UI", 8, "bold"), text_color=curr["text_muted"])
+        lbl_theme.pack(anchor="w", padx=10, pady=(4, 1))
 
         self.cb_theme = ctk.CTkComboBox(
             theme_box,
             values=ThemeManager.get_theme_names(),
             font=FONT_SMALL,
-            height=28,
+            height=26,
             command=self._on_theme_selected
         )
         self.cb_theme.set(self.initial_theme)
-        self.cb_theme.pack(fill="x", padx=8, pady=(0, 8))
+        self.cb_theme.pack(fill="x", padx=6, pady=(0, 6))
 
         # Open Source Privacy badge
         lbl_sec = ctk.CTkLabel(
             bottom_frame,
             text="🔒 100% Local & Open Source",
-            font=("Segoe UI", 9),
+            font=("Segoe UI", 8),
             text_color=curr["text_muted"],
             justify="center"
         )
         lbl_sec.pack(pady=(2, 0))
 
     def open_settings_dialog(self):
-        if not self.db:
-            return
-        SettingsDialog(
-            self.winfo_toplevel(),
-            self.db,
-            on_theme_change=self.on_theme_change,
-            on_import_excel=self.on_import_excel,
-            on_reset_onboarding=self.on_reset_onboarding
-        )
+        self.select_tab("settings")
 
     def _on_theme_selected(self, val):
         from ui.theme import ThemeManager
