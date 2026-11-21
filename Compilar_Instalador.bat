@@ -7,6 +7,9 @@ echo.
 
 set ISCC_PATH="%LocalAppData%\Programs\Inno Setup 6\ISCC.exe"
 if not exist %ISCC_PATH% (
+    set ISCC_PATH="C:\Program Files\Inno Setup 6\ISCC.exe"
+)
+if not exist %ISCC_PATH% (
     set ISCC_PATH="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 )
 

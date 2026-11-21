@@ -5,7 +5,7 @@ echo ========================================================
 echo.
 
 rem Asegurar que customtkinter y matplotlib se incluyan con todos sus assets
-pyinstaller --noconfirm --onedir --windowed ^
+python -m PyInstaller --noconfirm --onedir --windowed ^
     --icon "assets/icon.ico" ^
     --add-data "assets;assets" ^
     --collect-all customtkinter ^
