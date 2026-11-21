@@ -132,7 +132,7 @@ def import_transactions_sheet(db, ws, year):
                         break
             col += 1
 
-    count = 0
+    rows_to_insert = []
     for block in month_blocks:
         sc = block["start_col"]
         m = block["month"]
@@ -175,10 +175,13 @@ def import_transactions_sheet(db, ws, year):
             cat = find_canonical_category(cat)
             desc = str(desc).strip() if desc else ""
 
-            db.add_transaction(dt, cat, desc, ing, gas)
-            count += 1
+            rows_to_insert.append({"fecha": dt, "categoria": cat, "descripcion": desc, "ingreso": ing, "gasto": gas})
 
-    return count
+    # Bulk insert — single commit for the entire sheet (avoids per-row commit freeze)
+    if rows_to_insert:
+        db.add_transactions_bulk(rows_to_insert)
+
+    return len(rows_to_insert)
 
 
 def _infer_category(desc):

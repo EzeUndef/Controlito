@@ -130,7 +130,7 @@ class DatabaseManager:
     }
 
     # === TRANSACTIONS ===
-    def add_transaction(self, fecha, categoria, descripcion, ingreso=0, gasto=0):
+    def add_transaction(self, fecha, categoria, descripcion, ingreso=0, gasto=0, auto_commit=True):
         if isinstance(fecha, str):
             fecha = datetime.strptime(str(fecha)[:10], "%Y-%m-%d").date()
         mes = fecha.month
@@ -146,8 +146,35 @@ class DatabaseManager:
             "INSERT INTO transactions (fecha, categoria, descripcion, ingreso, gasto, mes, anio) VALUES (?,?,?,?,?,?,?)",
             (str(fecha), categoria, descripcion, ingreso, gasto, mes, anio)
         )
-        self.conn.commit()
+        if auto_commit:
+            self.conn.commit()
         return cursor.lastrowid
+
+    def add_transactions_bulk(self, rows):
+        """Insert many transactions at once with a single commit.
+        rows: list of dicts with keys: fecha, categoria, descripcion, ingreso, gasto
+        """
+        from datetime import datetime as _dt
+        params = []
+        for r in rows:
+            fecha = r["fecha"]
+            if isinstance(fecha, str):
+                fecha = _dt.strptime(str(fecha)[:10], "%Y-%m-%d").date()
+            mes = fecha.month
+            anio = fecha.year
+            categoria = str(r.get("categoria", "")).strip()[:100] or "Sin categoría"
+            descripcion = str(r.get("descripcion", "")).strip()[:500]
+            ingreso = max(0.0, float(r.get("ingreso", 0))) if r.get("ingreso") else 0.0
+            gasto = max(0.0, float(r.get("gasto", 0))) if r.get("gasto") else 0.0
+            params.append((str(fecha), categoria, descripcion, ingreso, gasto, mes, anio))
+
+        cursor = self.conn.cursor()
+        cursor.executemany(
+            "INSERT INTO transactions (fecha, categoria, descripcion, ingreso, gasto, mes, anio) VALUES (?,?,?,?,?,?,?)",
+            params
+        )
+        self.conn.commit()
+        return len(params)
 
     def update_transaction(self, tid, fecha, categoria, descripcion, ingreso, gasto):
         if isinstance(fecha, str):

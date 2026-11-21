@@ -124,6 +124,7 @@ class OnboardingView(ctk.CTkFrame):
         progress_dlg.resizable(False, False)
         progress_dlg.transient(self)
         progress_dlg.grab_set()
+        progress_dlg.protocol("WM_DELETE_WINDOW", lambda v=progress_dlg: [v.grab_release(), v.destroy()])
 
         lbl_status = ctk.CTkLabel(progress_dlg, text="Procesando archivo...", font=FONT_BODY)
         lbl_status.pack(pady=(25, 10))

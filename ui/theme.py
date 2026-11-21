@@ -180,11 +180,6 @@ def configure_treeview_style(theme=None):
         theme = ThemeManager.get_current_theme()
 
     style = ttk.Style()
-    # Force 'clam' theme which reliably supports complete custom coloring on Windows
-    try:
-        style.theme_use("clam")
-    except Exception:
-        pass
 
     bg_card = theme.get("bg_card", "#1e293b")
     bg_alt = theme.get("bg_card_alt", "#172033")

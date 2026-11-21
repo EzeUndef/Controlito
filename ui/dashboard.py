@@ -198,6 +198,15 @@ class DashboardView(ctk.CTkFrame):
         from ui.theme import ThemeManager
         t = ThemeManager.get_current_theme()
 
+        # Close previous figure to prevent memory leak
+        if hasattr(self, "canvas_donut") and self.canvas_donut is not None:
+            try:
+                self.canvas_donut.get_tk_widget().destroy()
+                self.canvas_donut.figure.clf()
+            except Exception:
+                pass
+            self.canvas_donut = None
+
         for widget in self.donut_container.winfo_children():
             widget.destroy()
 
@@ -244,6 +253,15 @@ class DashboardView(ctk.CTkFrame):
     def _render_bars(self, year):
         from ui.theme import ThemeManager
         t = ThemeManager.get_current_theme()
+
+        # Close previous figure to prevent memory leak
+        if hasattr(self, "canvas_bars") and self.canvas_bars is not None:
+            try:
+                self.canvas_bars.get_tk_widget().destroy()
+                self.canvas_bars.figure.clf()
+            except Exception:
+                pass
+            self.canvas_bars = None
 
         for widget in self.bars_container.winfo_children():
             widget.destroy()

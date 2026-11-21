@@ -294,6 +294,7 @@ class ServicesView(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda v=dialog: [v.grab_release(), v.destroy()])
 
         # Center
         dialog.update_idletasks()
@@ -394,6 +395,7 @@ class ServicesView(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda v=dialog: [v.grab_release(), v.destroy()])
 
         curr = ThemeManager.get_current_theme()
         dialog.configure(fg_color=curr["bg_main"])
@@ -439,6 +441,7 @@ class ServicesView(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda v=dialog: [v.grab_release(), v.destroy()])
 
         curr = ThemeManager.get_current_theme()
         dialog.configure(fg_color=curr["bg_main"])
@@ -549,6 +552,7 @@ class ServicesView(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda v=dialog: [v.grab_release(), v.destroy()])
 
         curr = ThemeManager.get_current_theme()
         dialog.configure(fg_color=curr["bg_main"])

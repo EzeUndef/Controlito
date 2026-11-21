@@ -27,6 +27,13 @@ class ControlitoApp(ctk.CTk):
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
 
+        # Apply 'clam' ttk theme once at startup (prevents freeze on each navigation)
+        try:
+            from tkinter import ttk as _ttk
+            _ttk.Style().theme_use("clam")
+        except Exception:
+            pass
+
         self.title("Controlito - Software de Finanzas y Control de Gastos")
         self.geometry("1180x750")
         self.minsize(980, 620)
@@ -203,6 +210,7 @@ class ControlitoApp(ctk.CTk):
         progress_dlg.resizable(False, False)
         progress_dlg.transient(self)
         progress_dlg.grab_set()
+        progress_dlg.protocol("WM_DELETE_WINDOW", lambda v=progress_dlg: [v.grab_release(), v.destroy()])
 
         lbl_status = ctk.CTkLabel(progress_dlg, text="Iniciando importación...", font=("Segoe UI", 12))
         lbl_status.pack(pady=(25, 10))

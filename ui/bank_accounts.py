@@ -1,4 +1,5 @@
 """Bank accounts and savings management view with live Dólar API integration."""
+import queue
 import customtkinter as ctk
 from tkinter import messagebox
 from utils.helpers import format_currency
@@ -35,6 +36,8 @@ class BankAccountsView(ctk.CTkFrame):
         if any(k == saved_rate for k, _ in RATE_TYPES):
             self.selected_rate_key = saved_rate
 
+        self._rate_queue = queue.Queue()
+        self._is_polling = False
         self.build_ui()
         self.load_data()
         # Auto-fetch live rates on load
@@ -161,34 +164,75 @@ class BankAccountsView(ctk.CTkFrame):
         self.update_savings_display()
 
     def refresh_dolar_rates(self):
-        """Fetch live rates from the API asynchronously."""
-        self.lbl_dolar_status.configure(text="⏳ Consultando dolarapi.com...")
+        """Fetch live rates from the API asynchronously using a safe background queue."""
+        try:
+            self.lbl_dolar_status.configure(text="⏳ Consultando dolarapi.com...")
+        except Exception:
+            return
 
         def on_result(success, rates):
-            # This callback runs in a background thread, schedule UI update on main thread
-            self.after(0, lambda: self._apply_rates(success, rates))
+            # Safe: worker thread ONLY pushes data to Python queue, never touches Tkinter
+            self._rate_queue.put((success, rates))
+
+        if not self._is_polling:
+            self._is_polling = True
+            self._poll_rate_queue()
 
         fetch_dolar_rates_async(callback=on_result)
 
+    def _poll_rate_queue(self):
+        """Polls the thread-safe queue on the main GUI thread."""
+        try:
+            if not self.winfo_exists():
+                self._is_polling = False
+                return
+        except Exception:
+            self._is_polling = False
+            return
+
+        try:
+            while True:
+                success, rates = self._rate_queue.get_nowait()
+                self._apply_rates(success, rates)
+                self._is_polling = False
+                return
+        except queue.Empty:
+            # Poll again in 150ms if widget still exists
+            try:
+                self.after(150, self._poll_rate_queue)
+            except Exception:
+                self._is_polling = False
+
     def _apply_rates(self, success, rates):
-        """Update the rate cards with live data (called on main thread)."""
+        """Update the rate cards with live data (called strictly on main thread)."""
+        try:
+            if not self.winfo_exists():
+                return
+        except Exception:
+            return
+
         for key, widgets in self.rate_cards.items():
             if key in rates:
                 r = rates[key]
                 compra = r.get("compra", 0)
                 venta = r.get("venta", 0)
                 fecha = r.get("fecha", "")
-                widgets["compra"].configure(text=f"Compra: ${compra:,.2f}" if compra else "Compra: —")
-                widgets["venta"].configure(text=f"Venta: ${venta:,.2f}" if venta else "Venta: —")
-                if fecha:
-                    widgets["fecha"].configure(text=f"Actualizado: {fecha}")
+                try:
+                    widgets["compra"].configure(text=f"Compra: ${compra:,.2f}" if compra else "Compra: —")
+                    widgets["venta"].configure(text=f"Venta: ${venta:,.2f}" if venta else "Venta: —")
+                    if fecha:
+                        widgets["fecha"].configure(text=f"Actualizado: {fecha}")
+                except Exception:
+                    pass
 
-        if success:
-            self.lbl_dolar_status.configure(text="✅ Cotizaciones actualizadas en vivo desde dolarapi.com", text_color=COLOR_SUCCESS)
-        else:
-            self.lbl_dolar_status.configure(text="⚠️ Sin conexión — mostrando última cotización guardada", text_color=COLOR_WARNING)
-
-        self.update_savings_display()
+        try:
+            if success:
+                self.lbl_dolar_status.configure(text="✅ Cotizaciones actualizadas en vivo desde dolarapi.com", text_color=COLOR_SUCCESS)
+            else:
+                self.lbl_dolar_status.configure(text="⚠️ Sin conexión — mostrando última cotización guardada", text_color=COLOR_WARNING)
+            self.update_savings_display()
+        except Exception:
+            pass
 
     def update_savings_display(self):
         """Recalculate the savings cards using the selected rate."""
@@ -313,6 +357,7 @@ class BankAccountsView(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda v=dialog: [v.grab_release(), v.destroy()])
 
         ctk.CTkLabel(dialog, text="Agregar Cuenta Bancaria", font=FONT_HEADER, text_color=TEXT_MAIN).pack(pady=(15, 10))
         form = ctk.CTkFrame(dialog, fg_color="transparent")
@@ -355,6 +400,7 @@ class BankAccountsView(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda v=dialog: [v.grab_release(), v.destroy()])
 
         ctk.CTkLabel(dialog, text="Actualizar Ahorros USD", font=FONT_HEADER, text_color=TEXT_MAIN).pack(pady=(15, 10))
         form = ctk.CTkFrame(dialog, fg_color="transparent")

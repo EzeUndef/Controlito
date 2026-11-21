@@ -372,6 +372,7 @@ class TransactionsView(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
+        dialog.protocol("WM_DELETE_WINDOW", lambda v=dialog: [v.grab_release(), v.destroy()])
 
         # Center dialog
         dialog.update_idletasks()
