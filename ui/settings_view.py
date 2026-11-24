@@ -346,9 +346,48 @@ class SettingsView(ctk.CTkFrame):
             text_color=curr["text_muted"],
             justify="left"
         )
-        lbl_info.pack(anchor="w", padx=20, pady=(0, 15))
+        lbl_info.pack(anchor="w", padx=20, pady=(0, 12))
+
+        info_btn_row = ctk.CTkFrame(sec_info, fg_color="transparent")
+        info_btn_row.pack(fill="x", padx=20, pady=(0, 15))
+
+        btn_check_updates = ctk.CTkButton(
+            info_btn_row,
+            text="🔍 Buscar Actualizaciones Ahora",
+            font=FONT_BODY_BOLD,
+            height=34,
+            fg_color=curr["primary"],
+            hover_color=curr["primary_hover"],
+            command=self._check_updates_manually
+        )
+        btn_check_updates.pack(side="left")
 
     # --- HANDLERS ---
+    def _check_updates_manually(self):
+        """Manually triggers update check and notifies the user."""
+        import threading
+        from utils.updater import check_for_updates
+
+        def _worker():
+            try:
+                info = check_for_updates(timeout=5)
+                if info and info.get("has_update"):
+                    from ui.update_dialog import UpdateDialog
+                    self.after(0, lambda: UpdateDialog(self.winfo_toplevel(), info))
+                elif info:
+                    self.after(0, lambda: messagebox.showinfo(
+                        "Controlito Actualizado",
+                        f"¡Tienes la versión más reciente ({info.get('current_version')})!\nNo hay actualizaciones pendientes disponibles."
+                    ))
+                else:
+                    self.after(0, lambda: messagebox.showwarning(
+                        "Sin Conexión",
+                        "No se pudo conectar con el servidor de actualizaciones en GitHub.\nRevisa tu conexión a internet e inténtalo nuevamente."
+                    ))
+            except Exception as e:
+                self.after(0, lambda: messagebox.showerror("Error", f"Ocurrió un error al verificar actualizaciones:\n{e}"))
+
+        threading.Thread(target=_worker, daemon=True).start()
     def _create_backup(self):
         """Creates a timestamped backup in the user's chosen location."""
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")

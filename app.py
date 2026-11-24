@@ -83,6 +83,25 @@ class ControlitoApp(ctk.CTk):
         else:
             self.navigate_to("dashboard")
 
+        # Check for updates in background (after 1.5s delay to let UI settle)
+        self.after(1500, self.check_updates_background)
+
+    def check_updates_background(self):
+        """Checks for newer releases on GitHub in a background thread without blocking UI."""
+        import threading
+        from utils.updater import check_for_updates
+
+        def _worker():
+            try:
+                info = check_for_updates(timeout=3)
+                if info and info.get("has_update"):
+                    from ui.update_dialog import UpdateDialog
+                    self.after(0, lambda: UpdateDialog(self, info))
+            except Exception:
+                pass
+
+        threading.Thread(target=_worker, daemon=True).start()
+
     def on_app_close(self):
         """Cleanly terminates the application, closes DB connections and exits without background residency."""
         try:
