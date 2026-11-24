@@ -116,6 +116,19 @@ class ControlitoApp(ctk.CTk):
         ):
             self.show_onboarding()
 
+    def reload_database(self, new_db_path=None):
+        """Reloads active database connection and refreshes active view."""
+        try:
+            if hasattr(self, 'db') and self.db:
+                self.db.close()
+        except Exception:
+            pass
+        self.db = DatabaseManager(new_db_path)
+        self.sidebar.db = self.db
+        active_key = self.current_view_key
+        self.current_view_key = None
+        self.navigate_to(active_key or "settings")
+
     def handle_theme_changed(self, theme_name):
         from ui.theme import ThemeManager, configure_treeview_style
         self.db.set_setting("theme", theme_name)
@@ -183,7 +196,8 @@ class ControlitoApp(ctk.CTk):
                 self.db,
                 on_theme_change=self.handle_theme_changed,
                 on_import_excel=self.import_excel_dialog,
-                on_reset_onboarding=self.confirm_reset_onboarding
+                on_reset_onboarding=self.confirm_reset_onboarding,
+                on_database_changed=self.reload_database
             )
         else:
             view = DashboardView(self.content_area, self.db, on_navigate=self.navigate_to)

@@ -25,8 +25,10 @@ No necesitas tener Python instalado ni saber de programación. Puedes descargar 
 
 ## ✨ Características Principales
 
-### 1. ⚙️ Panel de Configuración y Preferencias Restaurado
+### 1. ⚙️ Panel de Configuración, Backups y Sincronización en la Nube
 - **Acceso directo desde el menú lateral**: Ahora `⚙️ Configuración` cuenta con una sección dedicada de fácil acceso.
+- **💾 Copia de Seguridad y Restauración (1 Clic)**: Exporta una copia completa de toda tu base de datos en un archivo `.db` con fecha para resguardo o para mudarte de computadora, y restaura cualquier respaldo previo de manera atómica.
+- **☁️ Sincronización en la Nube (Google Drive, OneDrive, Dropbox)**: Opción para vincular tu base de datos a una carpeta compartida en la nube. Todo lo que cargues en una computadora se sincronizará automáticamente en las demás sin necesidad de servidores pagos.
 - **Personalización de temas**: Cambia instantáneamente entre 8 paletas visuales corporativas.
 - **Cotización preferida de divisas**: Selecciona con qué tipo de cambio calcular tus ahorros en USD.
 - **Gestión integral de base de datos**: Importación de nuevos Excel, reinicio de bienvenida, unificación automática de categorías y acceso directo a la carpeta local de datos.

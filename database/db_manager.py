@@ -1,20 +1,120 @@
 import sqlite3
 import os
+import json
+import shutil
 from datetime import datetime
 
 
 class DatabaseManager:
-    """Manages SQLite database for Controlito."""
+    """Manages SQLite database for Controlito with Cloud Sync and Backup support."""
+
+    CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".controlito")
+    CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
+    DEFAULT_DB_FILE = os.path.join(CONFIG_DIR, "controlito.db")
+
+    @classmethod
+    def get_config(cls):
+        try:
+            if os.path.exists(cls.CONFIG_FILE):
+                with open(cls.CONFIG_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception:
+            pass
+        return {}
+
+    @classmethod
+    def save_config(cls, data):
+        try:
+            os.makedirs(cls.CONFIG_DIR, exist_ok=True)
+            with open(cls.CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Error saving config: {e}")
+
+    @classmethod
+    def resolve_db_path(cls, explicit_path=None):
+        if explicit_path:
+            return os.path.normpath(explicit_path)
+        config = cls.get_config()
+        custom_path = config.get("custom_db_path")
+        if custom_path:
+            norm_custom = os.path.normpath(custom_path)
+            if os.path.exists(norm_custom):
+                return norm_custom
+            dir_name = os.path.dirname(norm_custom)
+            if dir_name and os.path.exists(dir_name):
+                return norm_custom
+        os.makedirs(cls.CONFIG_DIR, exist_ok=True)
+        return os.path.normpath(cls.DEFAULT_DB_FILE)
+
+    @classmethod
+    def set_custom_db_path(cls, path):
+        config = cls.get_config()
+        config["custom_db_path"] = os.path.normpath(str(path))
+        cls.save_config(config)
+
+    @classmethod
+    def reset_to_default_db(cls):
+        config = cls.get_config()
+        if "custom_db_path" in config:
+            del config["custom_db_path"]
+            cls.save_config(config)
+        return os.path.normpath(cls.DEFAULT_DB_FILE)
+
+    @classmethod
+    def is_using_custom_path(cls):
+        config = cls.get_config()
+        custom = config.get("custom_db_path")
+        if not custom:
+            return False
+        return os.path.normpath(custom) != os.path.normpath(cls.DEFAULT_DB_FILE)
 
     def __init__(self, db_path=None):
-        if db_path is None:
-            app_data = os.path.join(os.path.expanduser("~"), ".controlito")
-            os.makedirs(app_data, exist_ok=True)
-            db_path = os.path.join(app_data, "controlito.db")
-        self.db_path = db_path
+        self.db_path = self.resolve_db_path(db_path)
         self.conn = None
         self.connect()
         self.create_tables()
+
+    def backup_database(self, dest_path):
+        """Creates an atomic, uncorrupted backup of the active database using SQLite Backup API."""
+        dest_dir = os.path.dirname(dest_path)
+        if dest_dir:
+            os.makedirs(dest_dir, exist_ok=True)
+        try:
+            self.conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        except Exception:
+            pass
+        dest_conn = sqlite3.connect(dest_path)
+        try:
+            with dest_conn:
+                self.conn.backup(dest_conn)
+        finally:
+            dest_conn.close()
+        return True
+
+    def restore_database(self, source_path):
+        """Restores database from a backup file after verifying structure."""
+        if not os.path.exists(source_path):
+            raise FileNotFoundError(f"No se encontró el archivo: {source_path}")
+        test_conn = sqlite3.connect(source_path)
+        try:
+            tables = [r[0] for r in test_conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+            if "transactions" not in tables:
+                raise ValueError("El archivo seleccionado no parece ser una base de datos válida de Controlito (falta tabla transactions).")
+        finally:
+            test_conn.close()
+
+        src_conn = sqlite3.connect(source_path)
+        try:
+            with self.conn:
+                src_conn.backup(self.conn)
+        finally:
+            src_conn.close()
+        try:
+            self.conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        except Exception:
+            pass
+        return True
 
     def connect(self):
         self.conn = sqlite3.connect(self.db_path)
